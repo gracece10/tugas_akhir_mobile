@@ -10,47 +10,63 @@ class FirebaseAuthService {
     required String password,
     required String name,
     required String nim,
-    required String phoneNumber,
+    required String noWhatsapp,
   }) async {
     try {
-      UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
       User? user = userCredential.user;
 
       if (user != null) {
-        await _firestore.collection('users').doc(user.uid).set({
-          'nama': name,
+        await _firestore.collection('users').add({
+          'uid': user.uid, // Menyimpan uid di dokumen
+          'name': name,
           'nim': nim,
-          'noWhatsapp': phoneNumber,
+          'noWhatsapp': noWhatsapp,
           'email': email,
         });
-        print('User data saved to Firestore');
       }
 
       return user;
     } catch (e) {
-      print('Error in signUpWithEmailAndPassword: $e');
+      print("Error while signing up: $e");
       return null;
     }
   }
 
   Future<User?> loginWithEmailAndPassword(String email, String password) async {
     try {
-      UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       return userCredential.user;
     } catch (e) {
-      print('Error in loginWithEmailAndPassword: $e');
+      print(e);
       return null;
     }
   }
 
   Future<Map<String, dynamic>?> getUserData(User user) async {
-    DocumentSnapshot docSnapshot = await _firestore.collection('users').doc(user.uid).get();
-    return docSnapshot.data() as Map<String, dynamic>?;
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('users')
+          .where('uid', isEqualTo: user.uid)
+          .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.data() as Map<String, dynamic>?;
+      } else {
+        print('Document does not exist');
+        return null;
+      }
+    } catch (e) {
+      print('Error getting user data: $e');
+      return null;
+    }
   }
 }

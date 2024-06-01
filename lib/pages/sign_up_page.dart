@@ -16,17 +16,11 @@ class _SignUpPageState extends State<SignUpPage> {
   final _authService = FirebaseAuthService();
   final _formKey = GlobalKey<FormState>();
 
-  String _nama = '';
-  String _nim = '';
-  String _noWhatsapp = '';
-  String _email = '';
-  String _password = '';
-
-  final _namaController = TextEditingController();
-  final _nimController = TextEditingController();
-  final _noWhatsappController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _nimController = TextEditingController();
+  final TextEditingController _noWhatsappController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -72,22 +66,17 @@ class _SignUpPageState extends State<SignUpPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildTextField("NAMA", (value) => _nama = value,
-                              controller: _namaController),
+                          _buildTextField("NAMA", _namaController),
                           SizedBox(height: 15.0),
-                          _buildTextField("NIM", (value) => _nim = value,
-                              controller: _nimController),
+                          _buildTextField("NIM", _nimController),
                           SizedBox(height: 15.0),
-                          _buildTextField(
-                              "NO WHATSAPP", (value) => _noWhatsapp = value,
-                              controller: _noWhatsappController),
+                          _buildTextField("NO WHATSAPP", _noWhatsappController),
                           SizedBox(height: 15.0),
-                          _buildTextField("EMAIL", (value) => _email = value,
-                              email: true, controller: _emailController),
+                          _buildTextField("EMAIL", _emailController,
+                              email: true),
                           SizedBox(height: 15.0),
-                          _buildTextField(
-                              "PASSWORD", (value) => _password = value,
-                              password: true, controller: _passwordController),
+                          _buildTextField("PASSWORD", _passwordController,
+                              password: true),
                           SizedBox(height: 15.0),
                           Center(
                             child: Container(
@@ -106,15 +95,14 @@ class _SignUpPageState extends State<SignUpPage> {
                               child: ElevatedButton(
                                 onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
-                                    _formKey.currentState!.save();
                                     try {
                                       User? user = await _authService
                                           .signUpWithEmailAndPassword(
-                                        email: _email,
-                                        password: _password,
-                                        name: _nama,
-                                        nim: _nim,
-                                        phoneNumber: _noWhatsapp,
+                                        email: _emailController.text,
+                                        password: _passwordController.text,
+                                        name: _namaController.text,
+                                        nim: _nimController.text,
+                                        noWhatsapp: _noWhatsappController.text,
                                       );
 
                                       if (user != null) {
@@ -124,9 +112,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                               content:
                                                   Text('Berhasil Terdaftar')),
                                         );
-                                        setState(() {
-                                          _clearForm();
-                                        });
+                                        _clearForm();
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
@@ -208,10 +194,8 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  Widget _buildTextField(String label, Function(String) onSaved,
-      {bool email = false,
-      bool password = false,
-      required TextEditingController controller}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool email = false, bool password = false}) {
     return Container(
       width: double.infinity,
       height: 40.0,
@@ -249,7 +233,6 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         obscureText: password,
         keyboardType: email ? TextInputType.emailAddress : TextInputType.text,
-        onSaved: (value) => onSaved(value!),
         validator: (value) {
           if (value!.isEmpty) {
             return 'Field tidak boleh kosong';
